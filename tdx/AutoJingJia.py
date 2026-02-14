@@ -155,7 +155,7 @@ def main():
     if config.IS_DEBUG:
         scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=time.localtime().tm_hour, minute=time.localtime().tm_min, second=time.localtime().tm_sec + 1)
     else:
-        scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=start_hour, minute=second_minute, second=start_second)
+        scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=start_hour, minute=second_minute - 1, second=start_second)
 
     # 9:45的任务为按下键盘的shift+s组合键
     # one_quarter_later = fourth_minute + 15

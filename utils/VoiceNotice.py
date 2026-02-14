@@ -4,6 +4,7 @@ import pyaudio
 import time
 import base64
 import numpy as np
+import config.GlobalConfig as config
 
 # 以下为北京地域url，若使用新加坡地域的模型，需将url替换为：https://dashscope-intl.aliyuncs.com/api/v1
 dashscope.base_http_api_url = 'https://dashscope.aliyuncs.com/api/v1'
@@ -22,7 +23,7 @@ def voice_notice(text, model="qwen3-tts-flash"):
     response = dashscope.MultiModalConversation.call(
         # 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
         # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key = "sk-xxx"
-        api_key=os.getenv("DASHSCOPE_API_KEY"),
+        api_key=config.DASHSCOPE_API_KEY,
         model=model,
         text=text,
         voice="Cherry",

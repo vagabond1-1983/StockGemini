@@ -1,5 +1,5 @@
-conda activate StockDataParser
-cd "D:\Resources\python\StockDataParser"
-$env:DEBUG = "False"
+conda activate StockDataParser1
+cd "C:\Resources\StockGemini"
+[Environment]::SetEnvironmentVariable('DEBUG', 'False', 'User')
 python .\tdx\AutoJingJia.py
 pause

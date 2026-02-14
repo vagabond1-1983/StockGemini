@@ -7,7 +7,7 @@
 2026.1.17 在925竞价结束后，利用gemini对昨天封单额和今天封单额进行对比分析，并给出分析结果指向做多或者做空，辅助情绪判定并提醒决策
 2026.1.24 将加封事件放入队列，当有新的加封事件时，跟队列中相同加封金额对比，如果是以1.7倍数级增长则继续播报并提醒，如果加封幅度小于1.7倍则不进行提示
 2026.1.26 将昨天和今天封单额对比改为今天920和今天925的封单额对比，打印出表格。目的是看真实抢筹时间，资金的态度和情绪
-TODO 将截图能力放到笔记本的snap中，这样可以解放PC的工作
+2026.2.14 修改封单额类型处理失败的bug
 """
 import os
 import re
@@ -61,9 +61,9 @@ def detect_zt_amount():
     global remote_client
     # 1. 开始截图
     logger.debug(f"开始截图")
-    # screenshot_path = today_folder + '/' + time.strftime('%H%M%S', time.localtime()) + '.png'
-    # image_data = ima.take_tdx_screenshot(config.SCREENSHOT_AREA, screenshot_path)
-    image_data = ima.take_remote_tdx_screenshot(remote_client)
+    screenshot_path = today_folder + '/' + time.strftime('%H%M%S', time.localtime()) + '.png'
+    image_data = ima.take_tdx_screenshot(config.SCREENSHOT_AREA, screenshot_path)
+    # image_data = ima.take_remote_tdx_screenshot(remote_client)
     # 2. 图像识别出当前截图的股票数据
     logger.debug(f"开始截图的识别工作")
     df = parser.image_recognition_with_dashscope(image_data, ZHANGTING_PROMPT)
@@ -78,8 +78,8 @@ def is_collect_jj_end(origin_min):
     if config.IS_DEBUG:
         return time.localtime().tm_min > origin_min + 1
     else:
-        # 通过时间比较函数，判断当前时间晚于9:25:30秒
-        jj_end_tt = pd.Timestamp(f"{time.strftime('%Y-%m-%d', time.localtime())} 9:25:30")
+        # 通过时间比较函数，判断当前时间晚于9:24:30秒
+        jj_end_tt = pd.Timestamp(f"{time.strftime('%Y-%m-%d', time.localtime())} 9:24:30")
         return pd.Timestamp.now() > jj_end_tt
 
 def opt_ztscreen_df(zt_df):
@@ -94,14 +94,23 @@ def opt_ztscreen_df(zt_df):
     opt_df = pd.DataFrame(columns=zt_df.columns)
     for index, row in zt_df.iterrows():
         # 如果封单额单位不是万或者亿，说明没有封单，则从df中去除
-        if row['封单额'][-1] not in ['万', '亿']:
+        unit = row['封单额'][-1]
+        value = row['封单额'][:-1]
+        if unit not in ['万', '亿']:
+            row['封单额'] = 0
             continue
         else:
             try:
-                row['封单额'] = float(row['封单额'][:-1]) / 10000 if row['封单额'][-1] == '万' else float(row['封单额'][:-1])
-                opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
+                if unit == '万':
+                    value = float(value) / 10000
+                elif unit == '亿':
+                    value = float(value)
+                else:
+                    value = 0
+                row['封单额'] = str(value)
             except Exception as e:
                 logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
+        opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
     return opt_df
 
 def compare_zt_record(yesterday_df, curr_df):
@@ -121,8 +130,12 @@ def compare_zt_record(yesterday_df, curr_df):
             if curr_amount >= 1:
                 # 计算差值
                 diff_amount = float(curr_amount) - float(yesterday_amount)
-                # 处理概念为空的情况
-                row['概念'] = row['概念'] if row['概念'] is not None else '--'
+                try:
+                    # 处理概念为空的情况
+                    row['概念'] = row['概念'] if row['概念'] is not None else '--'
+                except Exception as e:
+                    logger.error(f"{row['名称']}的概念处理失败：{row['概念']}")
+                    row['概念'] = '--'
                 # 添加到结果中
                 new_row = pd.DataFrame({'代码': [row['代码']], '名称': [row['名称']],
                            '当天封单额': [row['封单额']], '上次封单额': [yesterday_amount],
@@ -171,13 +184,13 @@ def increase_amount_detect():
             shutil.move(ZT_925_TODAY_FILE, ZT_925_YESTERDAY_FILE)
 
     # 初始化远程mac
-    global remote_client
-    try:
-        remote_client = SSHConnection(config.MAC_IP, config.MAC_USER, config.MAC_PASSWORD)
-        remote_client.echo()
-    except Exception as e:
-        logger.error(f"初始化远程mac失败: {str(e)}，无法进行检测，考虑备用方案TODO")
-        return None
+    # global remote_client
+    # try:
+    #     remote_client = SSHConnection(config.MAC_IP, config.MAC_USER, config.MAC_PASSWORD)
+    #     remote_client.echo()
+    # except Exception as e:
+    #     logger.error(f"初始化远程mac失败: {str(e)}，无法进行检测，考虑备用方案TODO")
+    #     return None
 
     # 920截图的第一次基准数据
     logger.info("进行基准数据的采集")
@@ -186,6 +199,7 @@ def increase_amount_detect():
 
     # 920的基准数据缓存，方便后面的数据比对
     origin_df = add_topic_on_head(origin_df)
+    origin_df['封单额'] = origin_df['封单额'].astype(float)
     origin_df = origin_df[origin_df['封单额'] >= 1]
     if not config.IS_DEBUG:
         origin_df.to_csv(ZT_920_TODAY_FILE, index=False, header=True, encoding='utf-8')
