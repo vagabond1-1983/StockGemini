@@ -1,0 +1,17 @@
+jsonpath
+pandas
+mootdx
+openpyxl
+requests
+apscheduler
+pynput
+ollama
+openai
+dashscope
+pyaudio
+pywin32
+Pillow
+tushare
+google-genai
+anthropic
+paramiko
