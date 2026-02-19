@@ -1,6 +1,9 @@
 import os
 import sys
+import time
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
+
 from utils.MarkFileHandler import MyConfigParser
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +23,7 @@ SNIPASTE_PATH = config.read_option('global', 'SNIPASTE_PATH')
 TDX_MARK_FILE = config.read_option('global', 'TDX_MARK_FILE')
 TDX_MARK_BAK_FILE = config.read_option('global', 'TDX_MARK_BAK_FILE')
 ZT_ANALYSIS_PATH = config.read_option('global', 'ZT_ANALYSIS_PATH')
+DAILY_ZT_PATH = config.read_option('global', 'DAILY_ZT_PATH')
 # ---------------------end of global config --------------------
 
 # ---------------------tdx config --------------------
@@ -66,7 +70,7 @@ def jingjia_logger(logger_name):
         if IS_DEBUG:
             _logger_instance.setLevel(logging.DEBUG)
         # 创建时间处理器，默认保留7天，默认每10秒执行一次
-        time_handler = TimedRotatingFileHandler(filename=RESOURCES_PATH + '/JingJia.log', when='midnight', interval=7,
+        time_handler = TimedRotatingFileHandler(filename=os.path.join(RESOURCES_PATH, f'JingJia-{time.strftime('%Y-%m-%d', time.localtime())}.log'), when='midnight', interval=7,
                                                 backupCount=10, encoding='utf-8')
         time_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         if IS_DEBUG:

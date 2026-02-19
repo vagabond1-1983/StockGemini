@@ -8,6 +8,7 @@
 2026.1.24 将加封事件放入队列，当有新的加封事件时，跟队列中相同加封金额对比，如果是以1.7倍数级增长则继续播报并提醒，如果加封幅度小于1.7倍则不进行提示
 2026.1.26 将昨天和今天封单额对比改为今天920和今天925的封单额对比，打印出表格。目的是看真实抢筹时间，资金的态度和情绪
 2026.2.14 修改封单额类型处理失败的bug
+2026.2.19 收集并打印竞价分析期间所有处理过的df
 """
 import os
 import re
@@ -46,10 +47,10 @@ if not os.path.exists(today_folder):
     os.makedirs(today_folder)
 
 # 封单额记录文件
-ZT_925_AMOUNT_PATH = RESOURCES_PATH + '/' + '925_zt_amounts'
-ZT_925_TODAY_FILE = ZT_925_AMOUNT_PATH + '/TODAY.csv'
-ZT_925_YESTERDAY_FILE = ZT_925_AMOUNT_PATH + '/YESTERDAY.csv'
-ZT_920_TODAY_FILE = ZT_925_AMOUNT_PATH + '/920.csv'
+ZT_925_AMOUNT_PATH = os.path.join(RESOURCES_PATH, '925_zt_amounts')
+ZT_925_TODAY_FILE = os.path.join(ZT_925_AMOUNT_PATH, 'TODAY.csv')
+ZT_925_YESTERDAY_FILE = os.path.join(ZT_925_AMOUNT_PATH, 'YESTERDAY.csv')
+ZT_920_TODAY_FILE = os.path.join(ZT_925_AMOUNT_PATH, '920.csv')
 
 remote_client = None
 
@@ -111,6 +112,7 @@ def opt_ztscreen_df(zt_df):
             except Exception as e:
                 logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
         opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
+    opt_df['封单额'] = opt_df['封单额'].astype(float)
     return opt_df
 
 def compare_zt_record(yesterday_df, curr_df):
@@ -194,15 +196,17 @@ def increase_amount_detect():
 
     # 920截图的第一次基准数据
     logger.info("进行基准数据的采集")
+    pack_all_attacks_df = pd.DataFrame(columns=['时间', '单次df'])
     origin_df = detect_zt_amount()
     origin_df = opt_ztscreen_df(origin_df)
 
     # 920的基准数据缓存，方便后面的数据比对
     origin_df = add_topic_on_head(origin_df)
-    origin_df['封单额'] = origin_df['封单额'].astype(float)
     origin_df = origin_df[origin_df['封单额'] >= 1]
     if not config.IS_DEBUG:
         origin_df.to_csv(ZT_920_TODAY_FILE, index=False, header=True, encoding='utf-8')
+    pack_all_attacks_df = pd.concat([pack_all_attacks_df, pd.DataFrame({'时间': [time.strftime('%H:%M:%S', time.localtime())],
+                                                                            '单次df': [origin_df]})], ignore_index=True)
 
     origin_min = time.localtime().tm_min
 
@@ -224,6 +228,8 @@ def increase_amount_detect():
             # 过滤掉封单额小于1的行
             curr_df = curr_df[curr_df['封单额'] >= 1]
             curr_df = add_topic_on_head(curr_df)
+            pack_all_attacks_df = pd.concat([pack_all_attacks_df, pd.DataFrame({'时间': [time.strftime('%H:%M:%S', time.localtime())],
+                                                                                    '单次df': [curr_df]})], ignore_index=True)
             if not config.IS_DEBUG:
                 curr_df.to_csv(ZT_925_TODAY_FILE, index=False, header=True, encoding='utf-8')
             break
@@ -236,6 +242,8 @@ def increase_amount_detect():
             if origin_df is None or curr_df is None:
                 logger.error("本次数据采集失败，数据为空不满足检查条件，继续进入下一次采集")
                 continue
+            pack_all_attacks_df = pd.concat([pack_all_attacks_df, pd.DataFrame({'时间': [time.strftime('%H:%M:%S', time.localtime())],
+                                                                               '单次df': [curr_df]})], ignore_index=True)
             logger.info("检查是否有加封事件")
             increased_df = parser.zhangting_increase(origin_df, curr_df, ZTAMOUT_THRESHOLD)
             if len(increased_df) > 0:
@@ -272,6 +280,9 @@ def increase_amount_detect():
         result_announcement = f'<prosody pitch="high">{resp[resp.find("各位投资者")+6:]}</prosody>'
         logger.info(f"语音播报内容：{result_announcement}")
         vn.voice_notice(result_announcement)
+    # TODO 打印本次所有处理过的df信息，未来考虑用大模型做整体分析和方向预判
+    logger.info("打印本次所有处理过的df信息")
+    logger.info(pack_all_attacks_df.to_string())
 
 
 if __name__ == '__main__':

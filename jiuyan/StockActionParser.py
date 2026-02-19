@@ -70,7 +70,7 @@ logger = logging.getLogger(__name__)
 # 从resources下的.env文件中读取配置
 tdx = TdxQuotes()
 
-FIRST_ZT_PATH = os.path.join(RESOURCES_PATH, '2026_q1_zt')
+DAILY_ZT_PATH = os.path.join(RESOURCES_PATH, config.DAILY_ZT_PATH)
 
 # 读取mark备份文件供多处使用
 mark_reader = MyConfigParser(config.TDX_MARK_BAK_FILE, encoding='gbk')
@@ -356,7 +356,7 @@ def write_first_edition_2_txt(stock_infos_df, action_date):
     result_general_df = result_df[(result_df['field'] == '公告') | (result_df['field'] == '其他')]
     result_final_df = pd.concat([result_topic_df, result_general_df], ignore_index=True)
     # 将first_edition_df输出到一个txt文件中
-    FIRST_EDITION_TXT_FILE = os.path.join(FIRST_ZT_PATH, f"{action_date}.txt")
+    FIRST_EDITION_TXT_FILE = os.path.join(DAILY_ZT_PATH, f"{action_date}.txt")
     try:
         with open(FIRST_EDITION_TXT_FILE, 'w', encoding='utf-8') as f:
             for index, row in result_final_df.iterrows():
