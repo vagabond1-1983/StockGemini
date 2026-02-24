@@ -143,32 +143,33 @@ def main():
     step = 5
     up_points = 'area 5 5 2530 1380'
     down_points = 'area 10 -1436 2560 1380'
-    # 9:15:10截图一次，范围是下屏
-    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=start_minute, second=start_second,
-                      args=[f'{start_hour}{start_minute}封单额截图', up_points, 2])
-    # 9:20截图一次，范围是下屏
-    second_minute = start_minute + step
-    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=second_minute, second=start_second,
-                      args=[f'{start_hour}{second_minute}封单额截图', up_points, 10])
-    # 9:25截图封单额及开盘金额，范围是下屏
-    third_minute = second_minute + step
-    scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
-                      args=[f'{start_hour}{third_minute}封单额及看盘金额截图', up_points])
+    if config.ENABLE_SCREENSHOT_920:
+        # 9:15:10截图一次，范围是下屏
+        scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=start_minute, second=start_second,
+                          args=[f'{start_hour}{start_minute}封单额截图', up_points, 2])
+        # 9:20截图一次，范围是下屏
+        second_minute = start_minute + step
+        scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=second_minute, second=start_second,
+                          args=[f'{start_hour}{second_minute}封单额截图', up_points, 10])
+        # 9:25截图封单额及开盘金额，范围是下屏
+        third_minute = second_minute + step
+        scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
+                          args=[f'{start_hour}{third_minute}封单额及看盘金额截图', up_points])
 
-    # 9:25截图柚子看盘，范围是上屏
-    scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
-                      args=[f'{start_hour}{third_minute}柚子看盘截图', down_points])
+        # 9:25截图柚子看盘，范围是上屏
+        scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
+                          args=[f'{start_hour}{third_minute}柚子看盘截图', down_points])
 
-    scheduler.add_job(enotice.notice_before_attack, 'cron', hour=start_hour, minute=third_minute, second=start_second)
+        scheduler.add_job(enotice.notice_before_attack, 'cron', hour=start_hour, minute=third_minute, second=start_second)
 
-    # 9:30截图柚子看盘，范围是上屏
-    fourth_minute = third_minute + step
-    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
-                      args=[f'{start_hour}{fourth_minute}柚子看盘截图', down_points, 5])
+        # 9:30截图柚子看盘，范围是上屏
+        fourth_minute = third_minute + step
+        scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
+                          args=[f'{start_hour}{fourth_minute}柚子看盘截图', down_points, 5])
 
-    # 9:30截图局势分析，范围是下屏
-    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
-                      args=[f'{start_hour}{fourth_minute}局势分析截图', up_points, 5])
+        # 9:30截图局势分析，范围是下屏
+        scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
+                          args=[f'{start_hour}{fourth_minute}局势分析截图', up_points, 5])
 
     # 9:20进行竞价加封事件的检测并提示
     if config.ENABLE_INCREASE_AMOUNT_DETECT:

@@ -28,6 +28,7 @@ DAILY_ZT_PATH = config.read_option('global', 'DAILY_ZT_PATH')
 
 # ---------------------tdx config --------------------
 ENABLE_INCREASE_AMOUNT_DETECT = config.read_option('tdx_snap', 'ENABLE_INCREASE_AMOUNT_DETECT') == 'True'
+ENABLE_SCREENSHOT_920 = config.read_option('tdx_snap', 'ENABLE_SCREENSHOT_920') == 'True'
 SCREENSHOT_AREA = config.read_option('tdx_snap', 'SCREENSHOT_AREA')
 # ---------------------end of tdx config --------------------
 
