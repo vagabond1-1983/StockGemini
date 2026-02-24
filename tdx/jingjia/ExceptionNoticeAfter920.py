@@ -113,6 +113,7 @@ def opt_ztscreen_df(zt_df):
             except Exception as e:
                 logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
         opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
+    opt_df['封单额'] = opt_df['封单额'].astype(float)
     return opt_df
 
 def compare_zt_record(yesterday_df, curr_df):
@@ -132,17 +133,11 @@ def compare_zt_record(yesterday_df, curr_df):
             if curr_amount >= 1:
                 # 计算差值
                 diff_amount = float(curr_amount) - float(yesterday_amount)
-                try:
-                    # 处理概念为空的情况
-                    row['概念'] = row['概念'] if row['概念'] is not None else '--'
-                except Exception as e:
-                    logger.error(f"{row['名称']}的概念处理失败：{row['概念']}")
-                    row['概念'] = '--'
                 # 添加到结果中
                 new_row = pd.DataFrame({'代码': [row['代码']], '名称': [row['名称']],
-                           '当天封单额': [row['封单额']], '上次封单额': [yesterday_amount],
-                           '差值': [diff_amount], '开盘%': [row['开盘%']],
-                           '概念': [row['概念']]})
+                                        '当天封单额': [row['封单额']], '上次封单额': [yesterday_amount],
+                                        '差值': [diff_amount], '开盘%': [row['开盘%']],
+                                        '概念': [row.get('概念', '--')]})
                 if not new_row.empty:
                     compared_df = pd.concat([compared_df, new_row.dropna(how='all')], ignore_index=True, sort=False)
     # 将差值设置的更醒目
