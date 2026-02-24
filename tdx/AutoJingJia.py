@@ -141,6 +141,7 @@ def main():
     start_minute = 15
     start_second = 15
     step = 5
+    second_minute = start_minute + step
     up_points = 'area 5 5 2530 1380'
     down_points = 'area 10 -1436 2560 1380'
     if config.ENABLE_SCREENSHOT_920:
@@ -148,7 +149,6 @@ def main():
         scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=start_minute, second=start_second,
                           args=[f'{start_hour}{start_minute}封单额截图', up_points, 2])
         # 9:20截图一次，范围是下屏
-        second_minute = start_minute + step
         scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=second_minute, second=start_second,
                           args=[f'{start_hour}{second_minute}封单额截图', up_points, 10])
         # 9:25截图封单额及开盘金额，范围是下屏
