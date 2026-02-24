@@ -93,6 +93,7 @@ def opt_ztscreen_df(zt_df):
     if zt_df is None:
         return None
     opt_df = pd.DataFrame(columns=zt_df.columns)
+    opt_df['封单额'] = opt_df['封单额'].astype(float)
     for index, row in zt_df.iterrows():
         # 如果封单额单位不是万或者亿，说明没有封单，则从df中去除
         unit = row['封单额'][-1]
@@ -112,7 +113,6 @@ def opt_ztscreen_df(zt_df):
             except Exception as e:
                 logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
         opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
-    opt_df['封单额'] = opt_df['封单额'].astype(float)
     return opt_df
 
 def compare_zt_record(yesterday_df, curr_df):

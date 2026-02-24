@@ -56,6 +56,17 @@ def take_screenshot(topic, snip_area):
     except FileNotFoundError:
         logger.error(f"[{datetime.now().strftime('%H:%M:%S')}] 错误：未找到Snipaste程序，请检查其是否已安装并正确配置路径。")
 
+
+def take_screenshot_n_times(topic, snip_area, times):
+    """
+    使用Snipaste进行指定区域的多次截图，并以时间戳格式保存文件。
+    """
+    for i in range(times):
+        take_screenshot(f'{topic}-{i+1}', snip_area)
+        # 等待30秒
+        time.sleep(30)
+
+
 def launch_tdx_program(tdx_path):
     """
     启动指定路径的TDX程序。打开程序后，1.回车登录，2.esc关闭广告弹窗，3.60进入沪深个股列表
@@ -130,32 +141,41 @@ def main():
     start_minute = 15
     start_second = 15
     step = 5
-    # 9:15:15截图一次，范围是下屏
-    scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=start_minute, second=start_second,
-                      args=[f'{start_hour}{start_minute}封单额截图', 'area 5 5 2530 1380'])
+    up_points = 'area 5 5 2530 1380'
+    down_points = 'area 10 -1436 2560 1380'
+    # 9:15:10截图一次，范围是下屏
+    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=start_minute, second=start_second,
+                      args=[f'{start_hour}{start_minute}封单额截图', up_points, 2])
     # 9:20截图一次，范围是下屏
     second_minute = start_minute + step
-    scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=second_minute, second=start_second,
-                      args=[f'{start_hour}{second_minute}封单额截图', 'area 5 5 2530 1380'])
+    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=second_minute, second=start_second,
+                      args=[f'{start_hour}{second_minute}封单额截图', up_points, 10])
     # 9:25截图封单额及开盘金额，范围是下屏
     third_minute = second_minute + step
     scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
-                      args=[f'{start_hour}{third_minute}封单额及看盘金额截图', 'area 5 5 2530 1380'])
+                      args=[f'{start_hour}{third_minute}封单额及看盘金额截图', up_points])
 
     # 9:25截图柚子看盘，范围是上屏
     scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=third_minute, second=start_second,
-                      args=[f'{start_hour}{third_minute}柚子看盘截图', 'area 10 -1436 2560 1380'])
+                      args=[f'{start_hour}{third_minute}柚子看盘截图', down_points])
+
+    scheduler.add_job(enotice.notice_before_attack, 'cron', hour=start_hour, minute=third_minute, second=start_second)
 
     # 9:30截图柚子看盘，范围是上屏
     fourth_minute = third_minute + step
-    scheduler.add_job(take_screenshot, 'cron', hour=start_hour, minute=fourth_minute, second=0,
-                      args=[f'{start_hour}{fourth_minute}柚子看盘截图', 'area 10 -1436 2560 1380'])
+    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
+                      args=[f'{start_hour}{fourth_minute}柚子看盘截图', down_points, 5])
+
+    # 9:30截图局势分析，范围是下屏
+    scheduler.add_job(take_screenshot_n_times, 'cron', hour=start_hour, minute=fourth_minute, second=0,
+                      args=[f'{start_hour}{fourth_minute}局势分析截图', up_points, 5])
 
     # 9:20进行竞价加封事件的检测并提示
-    if config.IS_DEBUG:
-        scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=time.localtime().tm_hour, minute=time.localtime().tm_min, second=time.localtime().tm_sec + 1)
-    else:
-        scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=start_hour, minute=second_minute - 1, second=start_second)
+    if config.ENABLE_INCREASE_AMOUNT_DETECT:
+        if config.IS_DEBUG:
+            scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=time.localtime().tm_hour, minute=time.localtime().tm_min, second=time.localtime().tm_sec + 1)
+        else:
+            scheduler.add_job(enotice.increase_amount_detect, 'cron', hour=start_hour, minute=second_minute - 1, second=start_second)
 
     # 9:45的任务为按下键盘的shift+s组合键
     # one_quarter_later = fourth_minute + 15
