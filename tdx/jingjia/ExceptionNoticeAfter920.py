@@ -280,6 +280,11 @@ def increase_amount_detect():
     logger.info(pack_all_attacks_df.to_string())
 
 
+def notice_before_attack():
+    notice_text = f'<prosody pitch="high">{config.NOTICE_BEFORE_ATTACK}</prosody>'
+    vn.voice_notice(notice_text)
+
+
 if __name__ == '__main__':
     logger.info("读入920封单额情况")
     today920_df = read_zt_record(ZT_920_TODAY_FILE)

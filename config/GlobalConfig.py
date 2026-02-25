@@ -24,6 +24,7 @@ TDX_MARK_FILE = config.read_option('global', 'TDX_MARK_FILE')
 TDX_MARK_BAK_FILE = config.read_option('global', 'TDX_MARK_BAK_FILE')
 ZT_ANALYSIS_PATH = config.read_option('global', 'ZT_ANALYSIS_PATH')
 DAILY_ZT_PATH = config.read_option('global', 'DAILY_ZT_PATH')
+NOTICE_BEFORE_ATTACK = config.read_option('global', 'NOTICE_BEFORE_ATTACK')
 # ---------------------end of global config --------------------
 
 # ---------------------tdx config --------------------
