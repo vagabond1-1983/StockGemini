@@ -98,20 +98,16 @@ def opt_ztscreen_df(zt_df):
         # 如果封单额单位不是万或者亿，说明没有封单，则从df中去除
         unit = row['封单额'][-1]
         value = row['封单额'][:-1]
-        if unit not in ['万', '亿']:
-            row['封单额'] = 0
-            continue
-        else:
-            try:
-                if unit == '万':
-                    value = float(value) / 10000
-                elif unit == '亿':
-                    value = float(value)
-                else:
-                    value = 0
-                row['封单额'] = str(value)
-            except Exception as e:
-                logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
+        try:
+            if unit == '万':
+                value = float(value) / 10000
+            elif unit == '亿':
+                value = float(value)
+            else:
+                value = 0
+            row['封单额'] = str(value)
+        except Exception as e:
+            logger.error(f"{row['名称']}的封单额格式错误：{row['封单额']}，跳过优化处理不进行后续操作")
         opt_df = pd.concat([opt_df, row.to_frame().T], ignore_index=True)
     opt_df['封单额'] = opt_df['封单额'].astype(float)
     return opt_df
