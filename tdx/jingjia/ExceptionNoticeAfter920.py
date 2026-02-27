@@ -79,8 +79,8 @@ def is_collect_jj_end(origin_min):
     if config.IS_DEBUG:
         return time.localtime().tm_min > origin_min + 1
     else:
-        # 通过时间比较函数，判断当前时间晚于9:24:30秒
-        jj_end_tt = pd.Timestamp(f"{time.strftime('%Y-%m-%d', time.localtime())} 9:24:30")
+        # 通过时间比较函数，判断当前时间晚于9:25:30秒
+        jj_end_tt = pd.Timestamp(f"{time.strftime('%Y-%m-%d', time.localtime())} 9:25:30")
         return pd.Timestamp.now() > jj_end_tt
 
 def opt_ztscreen_df(zt_df):
