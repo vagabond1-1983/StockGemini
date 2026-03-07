@@ -272,9 +272,16 @@ def increase_amount_detect():
         logger.info(f"语音播报内容：{result_announcement}")
         vn.voice_notice(result_announcement)
     # TODO 打印本次所有处理过的df信息，未来考虑用大模型做整体分析和方向预判
-    logger.info("打印本次所有处理过的df信息")
-    logger.info(pack_all_attacks_df.to_string())
+    # logger.info("打印本次所有处理过的df信息")
+    # logger.info(pack_all_attacks_df.to_string())
 
+
+def log_increase_amount_detect():
+    try:
+        increase_amount_detect()
+    except Exception as e:
+        logger.error(f'{e}')
+        raise e
 
 def notice_before_attack():
     notice_text = f'<prosody pitch="high">{config.NOTICE_BEFORE_ATTACK}</prosody>'

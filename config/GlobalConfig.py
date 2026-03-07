@@ -73,7 +73,8 @@ def jingjia_logger(logger_name):
         if IS_DEBUG:
             _logger_instance.setLevel(logging.DEBUG)
         # 创建时间处理器，默认保留7天，默认每10秒执行一次
-        time_handler = TimedRotatingFileHandler(filename=os.path.join(RESOURCES_PATH, f'JingJia-{time.strftime('%Y-%m-%d', time.localtime())}.log'), when='midnight', interval=7,
+        LOG_PATH = os.path.join(RESOURCES_PATH, 'logs')
+        time_handler = TimedRotatingFileHandler(filename=os.path.join(LOG_PATH, f'JingJia-{time.strftime('%Y-%m-%d', time.localtime())}.log'), when='midnight', interval=7,
                                                 backupCount=10, encoding='utf-8')
         time_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         if IS_DEBUG:
