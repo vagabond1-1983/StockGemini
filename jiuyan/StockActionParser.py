@@ -139,7 +139,7 @@ def update_question_mark(current_reason, origin_tip, exist_mark, update_mark):
         return update_mark
 
     # 将之前标注过的首位涨停板数去掉
-    pure_exist_mark = exist_mark[1:]
+    pure_exist_mark = exist_mark[1:] if len(exist_mark) > 1 else exist_mark
     # 获取现在涨停原因概念，从current_reason首字母开始截取到\t作为涨停原因概念
     current_tip_reason = current_reason[:current_reason.find('\t')]
 

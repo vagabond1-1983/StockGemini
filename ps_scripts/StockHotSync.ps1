@@ -1,4 +1,4 @@
 conda activate StockDataParser
-cd "D:\Resources\python\StockDataParser"
+cd ..
 python .\jiuyan\StockActionParser.py
 pause
